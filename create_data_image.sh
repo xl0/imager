@@ -6,7 +6,11 @@ ROOTFS=rootfs.squashfs
 USER_UID=0
 USER_GID=0
 
-source ./su_command.sh
+if [ ! -x "`which e2cp`" ]
+then
+	echo "e2cp not found, please install 'e2tools'"
+	exit 1
+fi
 
 echo "Gathering rootfs and applications..."
 if test -f ${ROOTFS}
@@ -43,21 +47,14 @@ echo "Creating data partition of ${IMAGE_SIZE} MB..."
 mkdir -p images
 dd if=/dev/zero of=images/data.bin bs=1M count=${IMAGE_SIZE}
 /sbin/mkfs.ext4 -m3 -O ^huge_file -F images/data.bin
-echo
 
-echo "Populating data partition..."
-echo "(this step needs superuser privileges)"
-mkdir mnt
-${SU_CMD} "
-	mount images/data.bin mnt -o loop &&
-	install -m 644 -o 0 -g 0 ${ROOTFS} mnt/rootfs.bin &&
-	install -m 755 -o ${USER_UID} -g ${USER_GID} -d mnt/apps/ &&
-	if [ \"${APPS}\" != \"\" ]
-	then
-		install -m 644 -o ${USER_UID} -g ${USER_GID} -t mnt/apps/ ${APPS}
-	fi &&
-	install -m 755 -o 0 -g 0 -d mnt/local/etc/init.d &&
-	install -m 755 -o 0 -g 0 resize_data_part.target-sh mnt/local/etc/init.d/S00resize &&
-	umount mnt
-	"
-rmdir mnt
+e2cp -P 644 -G 0 -O 0 ${ROOTFS} images/data.bin:/rootfs.bin
+e2mkdir -P 755 -O ${USER_UID} -G  ${USER_GID} images/data.bin:/apps
+if [ -n "${APPS}" ]
+then
+	e2cp -P 644 -O ${USER_UID} -G ${USER_GID} ${APPS} images/data.bin:/apps/
+
+fi
+e2mkdir -P 755 -G 0 -O 0 images/data.bin:/local/etc/init.d
+e2cp -P 755 -G 0 -O 0 resize_data_part.target-sh images/data.bin:/local/etc/init.d/S00resize
+

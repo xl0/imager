@@ -2,7 +2,12 @@
 
 source ./partition_layout.sh
 
-source ./su_command.sh
+if [ ! -x "`which mcopy`" ]
+then
+	echo "mcopy not found. Please install 'mtools'"
+	exit 1
+fi
+
 
 echo "Checking presence of kernel files..."
 if test -f vmlinuz.bin
@@ -22,12 +27,5 @@ dd if=/dev/zero of=images/kernel.bin bs=512 count=${IMAGE_SIZE} status=noxfer
 /sbin/mkdosfs -F 32 images/kernel.bin
 echo
 
-echo "Populating data partition..."
-echo "(this step needs superuser privileges)"
-mkdir mnt
-${SU_CMD} "
-	mount images/kernel.bin mnt -o loop &&
-	cp vmlinuz.bin mnt/ &&
-	umount mnt
-	"
-rmdir mnt
+mcopy -i images/kernel.bin vmlinuz.bin ::vmlinuz.bin
+
