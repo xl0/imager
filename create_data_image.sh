@@ -58,3 +58,7 @@ fi
 e2mkdir -P 755 -G 0 -O 0 images/data.bin:/local/etc/init.d
 e2cp -P 755 -G 0 -O 0 resize_data_part.target-sh images/data.bin:/local/etc/init.d/S00resize
 
+mkdir -p temp
+touch temp/rootfs_updated
+e2cp -P 644 -G 0 -O 0 temp/rootfs_updated images/data.bin:/rootfs_updated
+rm temp/rootfs_updated
