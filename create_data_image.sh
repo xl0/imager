@@ -48,7 +48,9 @@ mkdir -p images
 dd if=/dev/zero of=images/data.bin bs=1M count=${IMAGE_SIZE}
 /sbin/mkfs.ext4 -m3 -O ^huge_file -F images/data.bin
 
-e2cp -P 644 -G 0 -O 0 ${ROOTFS} images/data.bin:/rootfs.bin
+# Copy as an "update image" to trigger the rootfs_update script on
+# the first run.
+e2cp -P 644 -G 0 -O 0 ${ROOTFS} images/data.bin:/update_r.bin
 e2mkdir -P 755 -O ${USER_UID} -G  ${USER_GID} images/data.bin:/apps
 if [ -n "${APPS}" ]
 then
